@@ -42,7 +42,7 @@ st.markdown(
 unsafe_allow_html=True
 )
 
-API_KEY="RXSP6YRqwacQDDY7MOtK4GNT5V9oOTE8"
+API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
 
 # Sidebar
 st.sidebar.markdown("## ⚙️ Dashboard Controls")
