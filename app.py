@@ -89,6 +89,12 @@ url=f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json
 
 data=requests.get(url).json()
 
+if"flowSegmentData" in data:
+    traffic=data["flowSegmentData"]
+else:
+    st.error("Traffic API error.Check API key or API limit.")
+    st.write(data)
+    st.stop()
 traffic=data["flowSegmentData"]
 
 current_speed=traffic["currentSpeed"]
