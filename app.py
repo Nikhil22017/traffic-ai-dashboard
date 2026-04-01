@@ -14,38 +14,52 @@ import time
 
 st.set_page_config(page_title="AI Traffic Dashboard", layout="wide")
 
-# Dark mode styling
+# ---------- MODERN UI CSS ----------
+
 st.markdown("""
 <style>
-.stApp {
-    background-color: #0E1117;
-    color: white;
+
+.stApp{
+background-color:#0b0f19;
+color:white;
 }
 
-h1, h2, h3 {
-    color: #00FFFF;
+h1{
+color:#00ffd5;
+text-align:center;
 }
 
-[data-testid="stMetricValue"] {
-    font-size: 28px;
+[data-testid="metric-container"]{
+background-color:#121a2b;
+border-radius:12px;
+padding:15px;
+border:1px solid #1f2a44;
+box-shadow:0px 0px 10px rgba(0,255,200,0.2);
+}
+
+[data-testid="stMetricValue"]{
+color:#00ffd5;
+font-size:28px;
+}
+
+section[data-testid="stSidebar"]{
+background-color:#0e1626;
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",unsafe_allow_html=True)
 
-st.markdown(
-"""
-<h1 style='text-align:center;color:#00FFFF'>
-🚦 AI Smart Traffic Monitoring Dashboard
-</h1>
-""",
-unsafe_allow_html=True
-)
+# ---------- HEADER ----------
+
+st.markdown("<h1>🚦 AI Smart Traffic Monitoring Dashboard</h1>",unsafe_allow_html=True)
+
+# ---------- API KEY ----------
 
 API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
 
-# Sidebar
-st.sidebar.markdown("## ⚙️ Dashboard Controls")
+# ---------- SIDEBAR ----------
+
+st.sidebar.title("⚙ Dashboard Controls")
 
 city=st.sidebar.selectbox(
 "Select City",
@@ -75,26 +89,22 @@ areas={
 }
 }
 
-area=st.sidebar.selectbox(
-"Select Area",
-list(areas[city].keys())
-)
+area=st.sidebar.selectbox("Select Area",list(areas[city].keys()))
 
 lat,lon=areas[city][area]
 
-st.write(f"### Traffic Analysis for {area}, {city}")
+st.subheader(f"Traffic Analysis for {area}, {city}")
 
-# API request
+# ---------- API REQUEST ----------
+
 url=f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
 data=requests.get(url).json()
 
-if"flowSegmentData" in data:
-    traffic=data["flowSegmentData"]
-else:
-    st.error("Traffic API error.Check API key or API limit.")
-    st.write(data)
+if "flowSegmentData" not in data:
+    st.error("Traffic API error. Check API key.")
     st.stop()
+
 traffic=data["flowSegmentData"]
 
 current_speed=traffic["currentSpeed"]
@@ -103,26 +113,28 @@ confidence=traffic["confidence"]
 
 congestion=free_speed-current_speed
 
+# ---------- METRICS ----------
+
+col1,col2,col3,col4=st.columns(4)
+
+col1.metric("🚗 Current Speed",f"{current_speed} km/h")
+col2.metric("🛣 Free Flow Speed",f"{free_speed} km/h")
+col3.metric("📊 Confidence",confidence)
+col4.metric("⚠ Congestion",congestion)
+
 st.divider()
 
-# Metrics
-col1,col2,col3=st.columns(3)
+# ---------- CONGESTION STATUS ----------
 
-col1.metric("Current Speed",f"{current_speed} km/h")
-col2.metric("Free Flow Speed",f"{free_speed} km/h")
-col3.metric("Confidence",confidence)
-
-# Congestion indicator
 if congestion<10:
     st.success("🟢 Smooth Traffic")
 elif congestion<20:
     st.warning("🟡 Moderate Traffic")
 else:
-    st.error("🔴 Heavy Congestion")
+    st.error("🔴 Heavy Traffic")
 
-st.divider()
+# ---------- GAUGE ----------
 
-# Congestion gauge
 st.subheader("Traffic Congestion Indicator")
 
 fig=go.Figure(go.Indicator(
@@ -139,11 +151,14 @@ gauge={
 }
 ))
 
+fig.update_layout(template="plotly_dark")
+
 st.plotly_chart(fig,use_container_width=True)
 
 st.divider()
 
-# Save dataset
+# ---------- SAVE DATA ----------
+
 row={
 "time":datetime.now(),
 "city":city,
@@ -162,15 +177,14 @@ file="traffic_history.csv"
 if os.path.exists(file):
     df.to_csv(file,mode="a",header=False,index=False)
 else:
-    df.to_csv(file,mode="w",header=True,index=False)
+    df.to_csv(file,index=False)
 
 data_hist=pd.read_csv(file)
 
 data_hist["time"]=pd.to_datetime(data_hist["time"])
 
-st.divider()
+# ---------- TRAFFIC HISTORY GRAPH ----------
 
-# Traffic speed graph
 st.subheader("Traffic Speed History")
 
 fig2=px.line(
@@ -181,11 +195,18 @@ color="area",
 markers=True
 )
 
-st.plotly_chart(fig2)
+fig2.update_layout(
+template="plotly_dark",
+plot_bgcolor="#0b0f19",
+paper_bgcolor="#0b0f19"
+)
+
+st.plotly_chart(fig2,use_container_width=True)
 
 st.divider()
 
-# Heatmap
+# ---------- HEATMAP ----------
+
 st.subheader("Traffic Heatmap")
 
 m=folium.Map(location=[lat,lon],zoom_start=12)
@@ -200,7 +221,8 @@ st_folium(m,width=900)
 
 st.divider()
 
-# AI prediction
+# ---------- AI PREDICTION ----------
+
 if os.path.exists("traffic_model.pkl"):
 
     model=joblib.load("traffic_model.pkl")
@@ -211,15 +233,15 @@ if os.path.exists("traffic_model.pkl"):
 
     st.subheader("🤖 AI Traffic Prediction")
 
-    st.metric("Predicted Congestion",round(prediction,2))
+    colA,colB=st.columns(2)
+
+    colA.metric("Predicted Congestion",round(prediction,2))
 
     predicted_speed=free_speed-prediction
 
-    st.metric("Predicted Speed",round(predicted_speed,2))
+    colB.metric("Predicted Speed",round(predicted_speed,2))
 
     st.subheader("AI Traffic Risk Score")
-
-    st.write("Risk Score = Predicted Congestion / Free Flow Speed")
 
     risk_score=prediction/free_speed
 
@@ -232,98 +254,37 @@ if os.path.exists("traffic_model.pkl"):
     else:
         st.error("High congestion risk")
 
-    st.divider()
-
-    # Future forecast
-    future=[]
-
-    for i in range(5):
-        pred=model.predict([[current_speed,free_speed,confidence]])
-        future.append(pred[0])
-
-    forecast=pd.DataFrame({
-    "Step":range(1,6),
-    "Predicted Congestion":future
-    })
-
-    fig3=px.line(
-    forecast,
-    x="Step",
-    y="Predicted Congestion",
-    markers=True,
-    title="Future Traffic Forecast"
-    )
-
-    st.plotly_chart(fig3)
-
 st.divider()
 
-# Top congested areas
-# Top Congested Areas Analytics
+# ---------- TOP CONGESTED AREAS ----------
 
 st.subheader("Top Congested Areas in City")
 
-st.write(
-"""
-This section analyzes historical traffic data to identify the most congested
-areas within the selected city. Congestion is calculated using the formula:
+if len(data_hist)>5:
 
-Congestion = Free Flow Speed − Current Speed
+    data_hist["congestion"]=data_hist["free_speed"]-data_hist["current_speed"]
 
-Higher congestion values indicate slower traffic conditions compared to
-ideal road speeds.
-"""
-)
+    area_congestion=data_hist.groupby("area")["congestion"].mean().reset_index()
 
-if len(data_hist) > 5:
-
-    # Calculate congestion
-    data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
-
-    # Area level congestion
-    area_congestion = data_hist.groupby("area")["congestion"].mean().reset_index()
-
-    area_congestion = area_congestion.sort_values(
-        by="congestion",
-        ascending=False
+    area_congestion=area_congestion.sort_values(
+    by="congestion",
+    ascending=False
     ).head(5)
 
-    # Graph
-    fig4 = px.bar(
-        area_congestion,
-        x="area",
-        y="congestion",
-        color="congestion",
-        title="Average Congestion by Area"
+    fig4=px.bar(
+    area_congestion,
+    x="area",
+    y="congestion",
+    color="congestion",
+    title="Average Congestion by Area"
     )
 
-    st.plotly_chart(fig4, use_container_width=True)
+    fig4.update_layout(template="plotly_dark")
 
-    st.write("### Congestion Details Table")
+    st.plotly_chart(fig4,use_container_width=True)
 
-    st.dataframe(area_congestion)
+# ---------- AUTO REFRESH ----------
 
-    # AI Insight
-    most_congested = area_congestion.iloc[0]["area"]
-
-    avg_congestion = area_congestion.iloc[0]["congestion"]
-
-    st.write(
-        f"AI Insight: **{most_congested}** currently shows the highest average congestion "
-        f"with a congestion score of **{round(avg_congestion,2)}**."
-    )
-
-    # Congestion level explanation
-
-    st.write("### Congestion Level Interpretation")
-
-    st.write("0 – 10  → Smooth Traffic")
-
-    st.write("10 – 20 → Moderate Congestion")
-
-    st.write("20+     → Heavy Congestion")
-
-# Auto refresh
 time.sleep(refresh_time)
 
 st.rerun()
