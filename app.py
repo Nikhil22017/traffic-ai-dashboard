@@ -434,3 +434,18 @@ fig_speed.update_layout(
 )
 
 st.plotly_chart(fig_speed, use_container_width=True)
+st.subheader("Processing Speed")
+
+speed=np.random.randint(20,40)
+
+fig4=go.Figure(go.Indicator(
+mode="gauge+number",
+value=speed,
+title={'text':"FPS"},
+gauge={'axis':{'range':[0,60]}}
+))
+
+fig4.update_layout(template="plotly_dark")
+
+st.plotly_chart(fig4,use_container_width=True)
+
