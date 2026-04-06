@@ -215,6 +215,33 @@ st.plotly_chart(fig2,use_container_width=True)
 
 st.divider()
 
+st.divider()
+st.subheader("Vehicle Mix Analytics")
+
+vehicle_data = {
+    "Cars": 45,
+    "Bikes": 30,
+    "Buses": 10,
+    "Trucks": 15
+}
+
+vehicle_df = pd.DataFrame({
+    "Vehicle": vehicle_data.keys(),
+    "Count": vehicle_data.values()
+})
+
+fig_vehicle = px.pie(
+    vehicle_df,
+    values="Count",
+    names="Vehicle",
+    hole=0.5,
+    title="Vehicle Distribution"
+)
+
+fig_vehicle.update_layout(template="plotly_dark")
+
+st.plotly_chart(fig_vehicle, use_container_width=True)
+
 # ----------- HEATMAP -----------
 
 st.subheader("Traffic Heatmap")
@@ -234,6 +261,45 @@ st_folium(m,width=900)
 
 st.divider()
 
+st.divider()
+st.subheader("AI Traffic Congestion Map")
+
+m2 = folium.Map(location=[lat, lon], zoom_start=12)
+
+if congestion < 10:
+    color = "green"
+    status = "Smooth Traffic"
+
+elif congestion < 20:
+    color = "orange"
+    status = "Moderate Traffic"
+
+else:
+    color = "red"
+    status = "Heavy Congestion"
+
+folium.CircleMarker(
+    location=[lat, lon],
+    radius=18,
+    popup=f"""
+    Area: {area}
+    City: {city}
+    Congestion Level: {round(congestion,2)}
+    Status: {status}
+    """,
+    color=color,
+    fill=True,
+    fill_color=color
+).add_to(m2)
+
+st_folium(m2, width=900)
+
+st.markdown("""
+### Traffic Legend
+🟢 Smooth Traffic  
+🟡 Moderate Congestion  
+🔴 Heavy Congestion
+""")
 # ----------- AI PREDICTION -----------
 
 if os.path.exists("traffic_model.pkl"):
@@ -259,6 +325,42 @@ if os.path.exists("traffic_model.pkl"):
     st.metric("Traffic Risk Score", round(risk_score,2))
 
 st.divider()
+
+st.divider()
+st.subheader("AI Prediction Accuracy")
+
+if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
+
+    model = joblib.load("traffic_model.pkl")
+
+    data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
+
+    X = data_hist[["current_speed","free_speed","confidence"]]
+
+    data_hist["predicted"] = model.predict(X)
+
+    fig_acc = go.Figure()
+
+    fig_acc.add_trace(go.Scatter(
+        x=data_hist["time"],
+        y=data_hist["congestion"],
+        mode="lines",
+        name="Actual Congestion"
+    ))
+
+    fig_acc.add_trace(go.Scatter(
+        x=data_hist["time"],
+        y=data_hist["predicted"],
+        mode="lines",
+        name="Predicted Congestion"
+    ))
+
+    fig_acc.update_layout(
+        template="plotly_dark",
+        title="Actual vs Predicted Congestion"
+    )
+
+    st.plotly_chart(fig_acc, use_container_width=True)
 
 # ----------- TOP CONGESTED AREAS -----------
 
@@ -286,3 +388,19 @@ st.plotly_chart(fig3,use_container_width=True)
 time.sleep(refresh_time)
 
 st.rerun()
+
+st.divider()
+st.subheader("Processing Speed Meter")
+
+processing_speed = round(1 / refresh_time * 100, 2)
+
+fig_speed = go.Figure(go.Indicator(
+    mode="gauge+number",
+    value=processing_speed,
+    title={'text': "Processing Speed"},
+    gauge={'axis': {'range': [0,100]}}
+))
+
+fig_speed.update_layout(template="plotly_dark")
+
+st.plotly_chart(fig_speed, use_container_width=True)
