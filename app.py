@@ -121,7 +121,7 @@ except:
     row = {
         "time": datetime.now(),
         "city": city,
-        "area": area_name,
+        "area": areas,
         "current_speed": current_speed,
         "free_speed": free_speed,
         "confidence": confidence,
