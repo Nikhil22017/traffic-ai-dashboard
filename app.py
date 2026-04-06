@@ -94,9 +94,8 @@ lat,lon = areas[city][area]
 file = "traffic_history.csv"
 
 API_KEY="LZnf1ZRULJFJHuzGif1iJjvL5QTiQKNP"
-for area_name, coords in areas[city].items():
-
-    lat, lon = coords
+@st.cache_data(ttl=60)
+def get_traffic(lat,lon):
 
     url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
@@ -145,10 +144,9 @@ st.divider()
 st.subheader("IoT Sensor Data Stream")
 
 # Simulated IoT traffic sensors
-vehicle_count = np.random.randint(20,120)
-road_density = round(np.random.uniform(0.2,0.9),2)
-avg_vehicle_speed = np.random.randint(20,60)
-
+vehicle_count = int(60 + np.random.normal(0,5))
+road_density = round(0.5 + np.random.normal(0,0.05),2)
+avg_vehicle_speed = int(30 + np.random.normal(0,3))
 colA,colB,colC = st.columns(3)
 
 colA.metric("Vehicle Count Sensor", vehicle_count)
@@ -156,8 +154,11 @@ colB.metric("Road Density Sensor", road_density)
 colC.metric("Avg Vehicle Speed Sensor", f"{avg_vehicle_speed} km/h")
 st.subheader("IoT Vehicle Density Monitoring")
 
-density_history = np.random.randint(20,120,10)
-
+density_history = np.clip(
+    np.cumsum(np.random.normal(0,3,10)) + 60,
+    20,
+    120
+)
 fig_density = go.Figure()
 
 fig_density.add_trace(go.Scatter(
@@ -402,8 +403,6 @@ if os.path.exists("traffic_model.pkl"):
     st.metric("Traffic Risk Score", round(risk_score,2))
 
 st.divider()
-
-st.divider()
 st.subheader("AI Prediction Accuracy")
 
 if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
@@ -414,7 +413,7 @@ if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
 
     X = data_hist[["current_speed","free_speed","confidence"]]
 
-    data_hist["predicted"] = model.predict(X)
+    data_hist["predicted"] = model.predict(X).rolling(5).mean()
 
     fig_acc = go.Figure()
 
@@ -495,9 +494,8 @@ if len(ranking) > 0:
 
 # ----------- AUTO REFRESH -----------
 
-time.sleep(refresh_time)
-
-st.rerun()
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(interval=refresh_time*1000)
 
 st.divider()
 st.subheader("Processing Speed")
