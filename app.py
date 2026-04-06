@@ -225,45 +225,87 @@ st.plotly_chart(fig3,use_container_width=True)
 st.divider()
 
 # ---------- HEATMAP ----------
-
 st.subheader("Traffic Heatmap")
 
-m=folium.Map(location=[lat,lon],zoom_start=12)
+st.write(
+"""
+This heatmap visualizes traffic intensity based on historical traffic data.
+Areas with higher traffic activity appear more intense on the map.
+"""
+)
 
-heat_data=data_hist[["lat","lon"]].values.tolist()
+m = folium.Map(location=[lat, lon], zoom_start=12)
 
-HeatMap(heat_data).add_to(m)
+heat_data = data_hist[["lat","lon"]].values.tolist()
 
-folium.Marker([lat,lon],popup=f"{area},{city}").add_to(m)
+HeatMap(
+    heat_data,
+    radius=20,
+    blur=15
+).add_to(m)
 
-st_folium(m,width=900)
+folium.Marker(
+    [lat, lon],
+    popup=f"""
+    Area: {area}<br>
+    City: {city}<br>
+    Current Speed: {current_speed} km/h<br>
+    Free Flow Speed: {free_speed} km/h
+    """
+).add_to(m)
 
-st.divider()
+st_folium(m, width=900)
 
 st.divider()
 
 st.subheader("AI Predicted Congestion Map")
 
+st.write(
+"""
+This map shows the predicted traffic congestion level in the selected area.
+The color of the marker represents traffic severity.
+"""
+)
+
 m2 = folium.Map(location=[lat, lon], zoom_start=12)
 
-# Prediction color
 if congestion < 10:
     color = "green"
+    status = "Smooth Traffic"
+
 elif congestion < 20:
     color = "orange"
+    status = "Moderate Traffic"
+
 else:
     color = "red"
+    status = "Heavy Congestion"
 
 folium.CircleMarker(
     location=[lat, lon],
-    radius=15,
-    popup=f"Predicted Congestion: {round(congestion,2)}",
+    radius=18,
+    popup=f"""
+    Area: {area}<br>
+    City: {city}<br>
+    Predicted Congestion: {round(congestion,2)}<br>
+    Status: {status}
+    """,
     color=color,
     fill=True,
     fill_color=color
 ).add_to(m2)
 
 st_folium(m2, width=900)
+
+st.markdown("""
+### Traffic Congestion Legend
+
+🟢 **Green** → Smooth traffic (Low congestion)
+
+🟡 **Orange** → Moderate traffic
+
+🔴 **Red** → Heavy congestion
+""")
 
 # ---------- AI PREDICTION ----------
 
