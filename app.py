@@ -378,25 +378,38 @@ if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
     st.plotly_chart(fig_acc, use_container_width=True)
 
 # ----------- TOP CONGESTED AREAS -----------
+st.divider()
+st.subheader("Top Congested Areas Comparison")
 
-st.subheader("Top Congested Areas")
-
+# calculate congestion
 data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
 
-area_congestion = data_hist.groupby("area")["congestion"].mean().reset_index()
+# filter selected city only
+city_data = data_hist[data_hist["city"] == city]
 
-area_congestion = area_congestion.sort_values(by="congestion",ascending=False)
+# group by area
+area_congestion = city_data.groupby("area")["congestion"].mean().reset_index()
 
+# sort values
+area_congestion = area_congestion.sort_values(by="congestion", ascending=False)
+
+# bar chart
 fig3 = go.Figure()
 
 fig3.add_trace(go.Bar(
-x=area_congestion["area"],
-y=area_congestion["congestion"]
+    x=area_congestion["area"],
+    y=area_congestion["congestion"],
+    marker_color="#00ffd5"
 ))
 
-fig3.update_layout(template="plotly_dark")
+fig3.update_layout(
+    template="plotly_dark",
+    title=f"Congestion Comparison in {city}",
+    xaxis_title="Area",
+    yaxis_title="Average Congestion Level"
+)
 
-st.plotly_chart(fig3,use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True)
 
 # ----------- AUTO REFRESH -----------
 
