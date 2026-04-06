@@ -240,6 +240,31 @@ st_folium(m,width=900)
 
 st.divider()
 
+st.divider()
+
+st.subheader("AI Predicted Congestion Map")
+
+m2 = folium.Map(location=[lat, lon], zoom_start=12)
+
+# Prediction color
+if congestion < 10:
+    color = "green"
+elif congestion < 20:
+    color = "orange"
+else:
+    color = "red"
+
+folium.CircleMarker(
+    location=[lat, lon],
+    radius=15,
+    popup=f"Predicted Congestion: {round(congestion,2)}",
+    color=color,
+    fill=True,
+    fill_color=color
+).add_to(m2)
+
+st_folium(m2, width=900)
+
 # ---------- AI PREDICTION ----------
 
 if os.path.exists("traffic_model.pkl"):
