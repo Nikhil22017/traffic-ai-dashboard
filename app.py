@@ -101,7 +101,7 @@ for area_name, coords in areas[city].items():
     url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
     response = requests.get(url).json()
-    if "flowSegmentData" in response:
+if "flowSegmentData" in response:
 
     traffic = response["flowSegmentData"]
 
@@ -134,8 +134,8 @@ else:
         df.to_csv(file, index=False)
 
 # ----------- METRICS -----------
+congestion = max(free_speed - current_speed, 0)
 
-congestion = free_speed - current_speed
 col1,col2,col3,col4 = st.columns(4)
 
 col1.metric("Current Speed", f"{current_speed} km/h")
