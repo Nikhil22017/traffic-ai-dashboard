@@ -89,23 +89,45 @@ lat,lon = areas[city][area]
 
 # ----------- API CALL -----------
 
-API_KEY = "eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
+# -------- Collect traffic data for all areas --------
 
-url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
+file = "traffic_history.csv
 
-data = requests.get(url).json()
+API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
+for area_name, coords in areas[city].items():
 
-if "flowSegmentData" not in data:
-    st.error("Traffic API error. Check API key.")
-    st.stop()
+    lat, lon = coords
 
-traffic = data["flowSegmentData"]
+    url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
-current_speed = traffic["currentSpeed"]
-free_speed = traffic["freeFlowSpeed"]
-confidence = traffic["confidence"]
+    response = requests.get(url).json()
 
-congestion = free_speed - current_speed
+    if "flowSegmentData" not in response:
+        continue
+
+    traffic = response["flowSegmentData"]
+
+    current_speed = traffic["currentSpeed"]
+    free_speed = traffic["freeFlowSpeed"]
+    confidence = traffic["confidence"]
+
+    row = {
+        "time": datetime.now(),
+        "city": city,
+        "area": area_name,
+        "current_speed": current_speed,
+        "free_speed": free_speed,
+        "confidence": confidence,
+        "lat": lat,
+        "lon": lon
+    }
+
+    df = pd.DataFrame([row])
+
+    if os.path.exists(file):
+        df.to_csv(file, mode="a", header=False, index=False)
+    else:
+        df.to_csv(file, index=False)
 
 # ----------- METRICS -----------
 
@@ -410,6 +432,26 @@ fig3.update_layout(
 )
 
 st.plotly_chart(fig3, use_container_width=True)
+st.subheader("AI Traffic Ranking")
+
+# calculate congestion
+data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
+
+city_data = data_hist[data_hist["city"] == city]
+
+ranking = city_data.groupby("area")["congestion"].mean().sort_values(ascending=False)
+
+if len(ranking) > 0:
+
+    most_congested = ranking.index[0]
+    least_congested = ranking.index[-1]
+
+    st.error(f"🚨 Most Congested Area: {most_congested}")
+
+    if len(ranking) > 1:
+        st.warning(f"⚠ Moderate Traffic: {ranking.index[1]}")
+
+    st.success(f"🟢 Smooth Traffic Area: {least_congested}")
 
 # ----------- AUTO REFRESH -----------
 
