@@ -131,6 +131,7 @@ for area_name, coords in areas[city].items():
 
 # ----------- METRICS -----------
 
+congestion = free_speed - current_speed
 col1,col2,col3,col4 = st.columns(4)
 
 col1.metric("Current Speed", f"{current_speed} km/h")
