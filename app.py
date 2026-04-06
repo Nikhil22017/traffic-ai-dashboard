@@ -93,35 +93,32 @@ lat,lon = areas[city][area]
 
 file = "traffic_history.csv"
 
-API_KEY = "LZnf1ZRULJFJHuzGif1iJjvL5QTiQKNP"
+API_KEY="LZnf1ZRULJFJHuzGif1iJjvL5QTiQKNP"
+for area_name, coords in areas[city].items():
 
-url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
+    lat, lon = coords
 
-try:
+    url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
+
     response = requests.get(url).json()
 
     if "flowSegmentData" in response:
 
         traffic = response["flowSegmentData"]
 
-        current_speed = traffic.get("currentSpeed", 0)
-        free_speed = traffic.get("freeFlowSpeed", 0)
-        confidence = traffic.get("confidence", 0)
+        current_speed = traffic.get("currentSpeed",0)
+        free_speed = traffic.get("freeFlowSpeed",0)
+        confidence = traffic.get("confidence",0)
 
     else:
-        raise Exception("API returned empty data")
-
-except:
-
-    # fallback realistic traffic simulation
-    current_speed = np.random.randint(20,40)
-    free_speed = np.random.randint(40,60)
-    confidence = round(np.random.uniform(0.7,1),2)
+        current_speed = 0
+        free_speed = 0
+        confidence = 0
 
     row = {
         "time": datetime.now(),
         "city": city,
-        "area": areas,
+        "area": area_name,
         "current_speed": current_speed,
         "free_speed": free_speed,
         "confidence": confidence,
@@ -477,28 +474,27 @@ fig3.update_layout(
 )
 
 st.plotly_chart(fig3, use_container_width=True)
-
-if "congestion" in df.columns and "area" in df.columns:
-
-    area_data = df.groupby("area")["congestion"].mean()
-
-    most_congested = area_data.idxmax()
-    least_congested = area_data.idxmin()
-
-    st.subheader("AI Traffic Ranking")
-
-    st.error(f"🚨 Most Congested Area: {most_congested}")
-    st.success(f"🟢 Smooth Traffic Area: {least_congested}")
-
-else:
-    st.warning("Traffic data not available yet")
 st.subheader("AI Traffic Ranking")
 
-st.error(f"🚨 Most Congested Area: {most_congested}")
+# calculate congestion
+data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
 
-st.warning(f"⚠ Moderate Traffic: {area_name}")
+city_data = data_hist[data_hist["city"] == city]
 
-st.success(f"🟢 Smooth Traffic Area: {least_congested}")
+ranking = city_data.groupby("area")["congestion"].mean().sort_values(ascending=False)
+
+if len(ranking) > 0:
+
+    most_congested = ranking.index[0]
+    least_congested = ranking.index[-1]
+
+    st.error(f"🚨 Most Congested Area: {most_congested}")
+
+    if len(ranking) > 1:
+        st.warning(f"⚠ Moderate Traffic: {ranking.index[1]}")
+
+    st.success(f"🟢 Smooth Traffic Area: {least_congested}")
+
 # ----------- AUTO REFRESH -----------
 
 time.sleep(refresh_time)
@@ -549,4 +545,3 @@ gauge={'axis':{'range':[0,60]}}
 fig4.update_layout(template="plotly_dark")
 
 st.plotly_chart(fig4,use_container_width=True)
-
