@@ -91,7 +91,7 @@ lat,lon = areas[city][area]
 
 # -------- Collect traffic data for all areas --------
 
-file = "traffic_history.csv
+file = "traffic_history.csv"
 
 API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
 for area_name, coords in areas[city].items():
