@@ -200,14 +200,10 @@ data_hist = pd.read_csv(file)
 
 data_hist["time"] = pd.to_datetime(data_hist["time"])
 
-data_hist = data_hist[
-(data_hist["city"] == city) &
-(data_hist["area"] == area)
-]
+# keep only selected city
+data_hist = data_hist[data_hist["city"] == city]
 
 data_hist = data_hist.sort_values("time")
-
-data_hist = data_hist.tail(20)
 
 # ----------- SPEED GRAPH -----------
 
