@@ -477,14 +477,21 @@ fig3.update_layout(
 )
 
 st.plotly_chart(fig3, use_container_width=True)
-st.subheader("AI Traffic Ranking")
 
-# calculate congestion
+if "congestion" in df.columns and "area" in df.columns:
 
-# Get most congested area
-most_congested = df.groupby("area")["congestion"].mean().idxmax()
-least_congested = df.groupby("area")["congestion"].mean().idxmin()
+    area_data = df.groupby("area")["congestion"].mean()
 
+    most_congested = area_data.idxmax()
+    least_congested = area_data.idxmin()
+
+    st.subheader("AI Traffic Ranking")
+
+    st.error(f"🚨 Most Congested Area: {most_congested}")
+    st.success(f"🟢 Smooth Traffic Area: {least_congested}")
+
+else:
+    st.warning("Traffic data not available yet")
 st.subheader("AI Traffic Ranking")
 
 st.error(f"🚨 Most Congested Area: {most_congested}")
