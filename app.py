@@ -12,7 +12,7 @@ import numpy as np
 import time
 import plotly.express as px
 
-st.set_page_config(page_title="AI Traffic Dashboard", layout="wide")
+st.set_page_config(page_title="AI + IOT Traffic Dashboard", layout="wide")
 
 # ----------- UI THEME -----------
 
@@ -49,7 +49,7 @@ background-color:#0e1626;
 </style>
 """,unsafe_allow_html=True)
 
-st.markdown("<h1>🚦 AI Smart Traffic Monitoring Dashboard</h1>",unsafe_allow_html=True)
+st.markdown("<h1>🚦 AI + IOT Smart Traffic Monitoring Dashboard</h1>",unsafe_allow_html=True)
 
 # ----------- SIDEBAR -----------
 
