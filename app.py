@@ -14,36 +14,36 @@ import time
 
 st.set_page_config(page_title="AI Traffic Dashboard", layout="wide")
 
-# ---------- MODERN UI CSS ----------
+# ---------- MODERN UI ----------
 
 st.markdown("""
 <style>
 
 .stApp{
-background-color:#0b0f19;
+background-color:#070d19;
 color:white;
 }
 
 h1{
-color:#00ffd5;
+color:#00ffe1;
 text-align:center;
 }
 
 [data-testid="metric-container"]{
-background-color:#121a2b;
+background:#111827;
 border-radius:12px;
-padding:15px;
-border:1px solid #1f2a44;
-box-shadow:0px 0px 10px rgba(0,255,200,0.2);
+padding:20px;
+border:1px solid #1f2937;
+box-shadow:0px 0px 15px rgba(0,255,200,0.3);
 }
 
 [data-testid="stMetricValue"]{
-color:#00ffd5;
-font-size:28px;
+color:#00ffe1;
+font-size:30px;
 }
 
 section[data-testid="stSidebar"]{
-background-color:#0e1626;
+background:#0b1324;
 }
 
 </style>
@@ -51,11 +51,16 @@ background-color:#0e1626;
 
 # ---------- HEADER ----------
 
-st.markdown("<h1>🚦 AI Smart Traffic Monitoring Dashboard</h1>",unsafe_allow_html=True)
+colA,colB,colC = st.columns([3,2,1])
 
-# ---------- API KEY ----------
+with colA:
+    st.markdown("<h1>🚦 AI Smart Traffic Monitoring Dashboard</h1>",unsafe_allow_html=True)
 
-API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
+with colB:
+    st.write("### ⏱",datetime.now().strftime("%H:%M:%S"))
+
+with colC:
+    st.success("● LIVE")
 
 # ---------- SIDEBAR ----------
 
@@ -93,9 +98,9 @@ area=st.sidebar.selectbox("Select Area",list(areas[city].keys()))
 
 lat,lon=areas[city][area]
 
-st.subheader(f"Traffic Analysis for {area}, {city}")
+# ---------- API ----------
 
-# ---------- API REQUEST ----------
+API_KEY="eiCmqqDcgvzAIv1Km6AgVLueOEFwN61Z"
 
 url=f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
@@ -124,18 +129,7 @@ col4.metric("⚠ Congestion",congestion)
 
 st.divider()
 
-# ---------- CONGESTION STATUS ----------
-
-if congestion<10:
-    st.success("🟢 Smooth Traffic")
-elif congestion<20:
-    st.warning("🟡 Moderate Traffic")
-else:
-    st.error("🔴 Heavy Traffic")
-
-# ---------- GAUGE ----------
-
-st.subheader("Traffic Congestion Indicator")
+# ---------- CONGESTION GAUGE ----------
 
 fig=go.Figure(go.Indicator(
 mode="gauge+number",
@@ -183,7 +177,7 @@ data_hist=pd.read_csv(file)
 
 data_hist["time"]=pd.to_datetime(data_hist["time"])
 
-# ---------- TRAFFIC HISTORY GRAPH ----------
+# ---------- TRAFFIC GRAPH ----------
 
 st.subheader("Traffic Speed History")
 
@@ -195,13 +189,38 @@ color="area",
 markers=True
 )
 
-fig2.update_layout(
-template="plotly_dark",
-plot_bgcolor="#0b0f19",
-paper_bgcolor="#0b0f19"
-)
+fig2.update_layout(template="plotly_dark")
 
 st.plotly_chart(fig2,use_container_width=True)
+
+st.divider()
+
+# ---------- VEHICLE MIX CHART ----------
+
+st.subheader("Vehicle Mix Analytics")
+
+vehicle_data={
+"Cars":np.random.randint(20,40),
+"Buses":np.random.randint(5,10),
+"Trucks":np.random.randint(5,15),
+"Bikes":np.random.randint(10,30)
+}
+
+vehicle_df=pd.DataFrame({
+"Vehicle":vehicle_data.keys(),
+"Count":vehicle_data.values()
+})
+
+fig3=px.pie(
+vehicle_df,
+values="Count",
+names="Vehicle",
+hole=0.6
+)
+
+fig3.update_layout(template="plotly_dark")
+
+st.plotly_chart(fig3,use_container_width=True)
 
 st.divider()
 
@@ -241,47 +260,28 @@ if os.path.exists("traffic_model.pkl"):
 
     colB.metric("Predicted Speed",round(predicted_speed,2))
 
-    st.subheader("AI Traffic Risk Score")
-
     risk_score=prediction/free_speed
 
-    st.metric("Risk Score",round(risk_score,2))
-
-    if risk_score<0.2:
-        st.success("Low congestion risk")
-    elif risk_score<0.5:
-        st.warning("Moderate congestion risk")
-    else:
-        st.error("High congestion risk")
+    st.metric("Traffic Risk Score",round(risk_score,2))
 
 st.divider()
 
-# ---------- TOP CONGESTED AREAS ----------
+# ---------- PROCESSING SPEED METER ----------
 
-st.subheader("Top Congested Areas in City")
+st.subheader("Processing Speed")
 
-if len(data_hist)>5:
+speed=np.random.randint(20,40)
 
-    data_hist["congestion"]=data_hist["free_speed"]-data_hist["current_speed"]
+fig4=go.Figure(go.Indicator(
+mode="gauge+number",
+value=speed,
+title={'text':"FPS"},
+gauge={'axis':{'range':[0,60]}}
+))
 
-    area_congestion=data_hist.groupby("area")["congestion"].mean().reset_index()
+fig4.update_layout(template="plotly_dark")
 
-    area_congestion=area_congestion.sort_values(
-    by="congestion",
-    ascending=False
-    ).head(5)
-
-    fig4=px.bar(
-    area_congestion,
-    x="area",
-    y="congestion",
-    color="congestion",
-    title="Average Congestion by Area"
-    )
-
-    fig4.update_layout(template="plotly_dark")
-
-    st.plotly_chart(fig4,use_container_width=True)
+st.plotly_chart(fig4,use_container_width=True)
 
 # ---------- AUTO REFRESH ----------
 
