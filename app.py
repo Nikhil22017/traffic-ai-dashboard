@@ -428,8 +428,7 @@ if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
     X = data_hist[["current_speed","free_speed","confidence"]]
 
     pred = model.predict(X)
-data_hist["predicted"] = pd.Series(pred).rolling(5, min_periods=1).mean()
-
+    data_hist["predicted"] = pd.Series(pred).rolling(5, min_periods=1).mean()
     fig_acc = go.Figure()
 
     fig_acc.add_trace(go.Scatter(
