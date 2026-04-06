@@ -98,20 +98,30 @@ def get_traffic(lat,lon):
     url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
     response = requests.get(url).json()
+try:
 
-if "flowSegmentData" in response:
+    r = requests.get(url, timeout=10)
+    response = r.json()
 
-    traffic = response["flowSegmentData"]
+    if "flowSegmentData" in response:
 
-    current_speed = traffic.get("currentSpeed", 25)
-    free_speed = traffic.get("freeFlowSpeed", 40)
-    confidence = traffic.get("confidence", 0.8)
+        traffic = response["flowSegmentData"]
 
-else:
+        current_speed = traffic.get("currentSpeed", 25)
+        free_speed = traffic.get("freeFlowSpeed", 40)
+        confidence = traffic.get("confidence", 0.8)
+
+    else:
+        raise Exception("API returned empty")
+
+except:
+
     # fallback simulated data
     current_speed = int(25 + np.random.normal(0,3))
     free_speed = int(40 + np.random.normal(0,3))
     confidence = round(np.random.uniform(0.7,1),2)
+
+
 
     row = {
         "time": datetime.now(),
