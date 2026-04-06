@@ -101,15 +101,19 @@ for area_name, coords in areas[city].items():
     url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
     response = requests.get(url).json()
-
-    if "flowSegmentData" not in response:
-        continue
+    if "flowSegmentData" in response:
 
     traffic = response["flowSegmentData"]
 
-    current_speed = traffic["currentSpeed"]
-    free_speed = traffic["freeFlowSpeed"]
-    confidence = traffic["confidence"]
+    current_speed = traffic.get("currentSpeed", 0)
+    free_speed = traffic.get("freeFlowSpeed", 0)
+    confidence = traffic.get("confidence", 0)
+
+else:
+    # fallback values if API fails
+    current_speed = 0
+    free_speed = 0
+    confidence = 0
 
     row = {
         "time": datetime.now(),
@@ -132,8 +136,6 @@ for area_name, coords in areas[city].items():
 # ----------- METRICS -----------
 
 congestion = free_speed - current_speed
-if current_speed == 0 and free_speed == 0:
-    st.warning("Traffic data unavailable. Using fallback values.")
 col1,col2,col3,col4 = st.columns(4)
 
 col1.metric("Current Speed", f"{current_speed} km/h")
