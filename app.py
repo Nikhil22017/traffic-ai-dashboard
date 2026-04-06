@@ -144,6 +144,37 @@ col3.metric("Confidence", confidence)
 col4.metric("Congestion", congestion)
 
 st.divider()
+st.subheader("IoT Sensor Data Stream")
+
+# Simulated IoT traffic sensors
+vehicle_count = np.random.randint(20,120)
+road_density = round(np.random.uniform(0.2,0.9),2)
+avg_vehicle_speed = np.random.randint(20,60)
+
+colA,colB,colC = st.columns(3)
+
+colA.metric("Vehicle Count Sensor", vehicle_count)
+colB.metric("Road Density Sensor", road_density)
+colC.metric("Avg Vehicle Speed Sensor", f"{avg_vehicle_speed} km/h")
+st.subheader("IoT Vehicle Density Monitoring")
+
+density_history = np.random.randint(20,120,10)
+
+fig_density = go.Figure()
+
+fig_density.add_trace(go.Scatter(
+    y=density_history,
+    mode="lines+markers",
+    name="Vehicle Density"
+))
+
+fig_density.update_layout(
+    template="plotly_dark",
+    xaxis_title="Time",
+    yaxis_title="Vehicle Count"
+)
+
+st.plotly_chart(fig_density,use_container_width=True)
 
 # ----------- CONGESTION STATUS -----------
 
