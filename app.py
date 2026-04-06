@@ -266,6 +266,30 @@ if os.path.exists("traffic_model.pkl"):
 
 st.divider()
 
+st.divider()
+
+st.subheader("AI Prediction Accuracy")
+
+if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
+
+    model = joblib.load("traffic_model.pkl")
+
+    data_hist["congestion"] = data_hist["free_speed"] - data_hist["current_speed"]
+
+    X = data_hist[["current_speed","free_speed","confidence"]]
+
+    data_hist["predicted"] = model.predict(X)
+
+    fig5 = px.line(
+        data_hist.tail(30),
+        x="time",
+        y=["congestion","predicted"],
+        title="Actual vs Predicted Congestion"
+    )
+
+    fig5.update_layout(template="plotly_dark")
+
+    st.plotly_chart(fig5,use_container_width=True)
 # ---------- PROCESSING SPEED METER ----------
 
 st.subheader("Processing Speed")
