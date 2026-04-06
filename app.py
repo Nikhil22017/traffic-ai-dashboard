@@ -175,6 +175,16 @@ fig_density.update_layout(
 )
 
 st.plotly_chart(fig_density,use_container_width=True)
+st.subheader("Smart Traffic Alert System")
+
+if vehicle_count > 100:
+    st.error("🚨 High Traffic Alert Detected")
+
+elif vehicle_count > 60:
+    st.warning("⚠ Moderate Traffic Alert")
+
+else:
+    st.success("🟢 Traffic Flow Normal")
 
 # ----------- CONGESTION STATUS -----------
 
