@@ -99,8 +99,6 @@ def get_traffic(lat,lon):
 
     response = requests.get(url).json()
 
-    response = requests.get(url).json()
-
 if "flowSegmentData" in response:
 
     traffic = response["flowSegmentData"]
