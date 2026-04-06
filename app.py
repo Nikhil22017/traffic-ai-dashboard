@@ -101,19 +101,19 @@ for area_name, coords in areas[city].items():
     url = f"https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point={lat},{lon}&key={API_KEY}"
 
     response = requests.get(url).json()
-if "flowSegmentData" in response:
 
-    traffic = response["flowSegmentData"]
+    if "flowSegmentData" in response:
 
-    current_speed = traffic.get("currentSpeed", 0)
-    free_speed = traffic.get("freeFlowSpeed", 0)
-    confidence = traffic.get("confidence", 0)
+        traffic = response["flowSegmentData"]
 
-else:
-    # fallback values if API fails
-    current_speed = 0
-    free_speed = 0
-    confidence = 0
+        current_speed = traffic.get("currentSpeed",0)
+        free_speed = traffic.get("freeFlowSpeed",0)
+        confidence = traffic.get("confidence",0)
+
+    else:
+        current_speed = 0
+        free_speed = 0
+        confidence = 0
 
     row = {
         "time": datetime.now(),
