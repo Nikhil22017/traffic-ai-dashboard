@@ -391,17 +391,32 @@ time.sleep(refresh_time)
 st.rerun()
 
 st.divider()
-st.subheader("Processing Speed Meter")
+st.subheader("Processing Speed")
 
-processing_speed = round(1 / refresh_time * 100, 2)
+# simulate processing speed
+processing_speed = np.random.randint(20, 40)
 
 fig_speed = go.Figure(go.Indicator(
     mode="gauge+number",
     value=processing_speed,
-    title={'text': "Processing Speed"},
-    gauge={'axis': {'range': [0,100]}}
+    title={'text': "FPS"},
+    gauge={
+        'axis': {'range': [0, 60]},
+        'bar': {'color': "#00ff88"},
+        'bgcolor': "black",
+        'borderwidth': 2,
+        'bordercolor': "#00ff88",
+        'steps': [
+            {'range': [0, 20], 'color': "#1a2a3a"},
+            {'range': [20, 40], 'color': "#16263a"},
+            {'range': [40, 60], 'color': "#101e2e"}
+        ],
+    }
 ))
 
-fig_speed.update_layout(template="plotly_dark")
+fig_speed.update_layout(
+    template="plotly_dark",
+    height=350
+)
 
 st.plotly_chart(fig_speed, use_container_width=True)
