@@ -89,8 +89,6 @@ lat,lon = areas[city][area]
 
 # ----------- API CALL -----------
 
-# -------- Collect traffic data for all areas --------
-
 file = "traffic_history.csv"
 
 API_KEY="LZnf1ZRULJFJHuzGif1iJjvL5QTiQKNP"
@@ -101,16 +99,21 @@ def get_traffic(lat,lon):
 
     response = requests.get(url).json()
 
-    if "flowSegmentData" in response:
-        traffic = response["flowSegmentData"]
-        current_speed = traffic["currentSpeed"]
-        free_speed = traffic["freeFlowSpeed"]
-        confidence = traffic["confidence"]
+    response = requests.get(url).json()
 
-    else:
-        current_speed = np.random.randint(15,40)
-        free_speed = np.random.randint(40,60)
-        confidence = round(np.random.uniform(0.7,1),2)
+if "flowSegmentData" in response:
+
+    traffic = response["flowSegmentData"]
+
+    current_speed = traffic.get("currentSpeed", 25)
+    free_speed = traffic.get("freeFlowSpeed", 40)
+    confidence = traffic.get("confidence", 0.8)
+
+else:
+    # fallback simulated data
+    current_speed = int(25 + np.random.normal(0,3))
+    free_speed = int(40 + np.random.normal(0,3))
+    confidence = round(np.random.uniform(0.7,1),2)
 
     row = {
         "time": datetime.now(),
@@ -131,6 +134,9 @@ def get_traffic(lat,lon):
         df.to_csv(file, index=False)
 
 # ----------- METRICS -----------
+current_speed = current_speed if 'current_speed' in locals() else 25
+free_speed = free_speed if 'free_speed' in locals() else 40
+
 congestion = max(free_speed - current_speed, 0)
 
 col1,col2,col3,col4 = st.columns(4)
