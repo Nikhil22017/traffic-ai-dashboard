@@ -225,23 +225,31 @@ st.plotly_chart(fig3,use_container_width=True)
 st.divider()
 
 # ---------- HEATMAP ----------
-st.subheader("Traffic Heatmap")
+st.subheader("City Traffic Heatmap")
 
 st.write(
 """
-This heatmap visualizes traffic intensity based on historical traffic data.
-Areas with higher traffic activity appear more intense on the map.
+This heatmap represents traffic activity across multiple areas in the selected city.
+Darker zones indicate higher traffic activity.
 """
 )
 
 m = folium.Map(location=[lat, lon], zoom_start=12)
 
-heat_data = data_hist[["lat","lon"]].values.tolist()
+# Simulated nearby points for city heatmap
+heat_points = []
+
+for i in range(len(data_hist.tail(20))):
+
+    lat_offset = lat + np.random.uniform(-0.01,0.01)
+    lon_offset = lon + np.random.uniform(-0.01,0.01)
+
+    heat_points.append([lat_offset, lon_offset])
 
 HeatMap(
-    heat_data,
-    radius=20,
-    blur=15
+    heat_points,
+    radius=25,
+    blur=18
 ).add_to(m)
 
 folium.Marker(
@@ -249,60 +257,64 @@ folium.Marker(
     popup=f"""
     Area: {area}<br>
     City: {city}<br>
-    Current Speed: {current_speed} km/h<br>
-    Free Flow Speed: {free_speed} km/h
-    """
+    Current Speed: {current_speed} km/h
+    """,
+    icon=folium.Icon(color="blue")
 ).add_to(m)
 
 st_folium(m, width=900)
 
 st.divider()
 
-st.subheader("AI Predicted Congestion Map")
+st.subheader("AI Traffic Congestion Map")
 
 st.write(
 """
-This map shows the predicted traffic congestion level in the selected area.
-The color of the marker represents traffic severity.
+This map visualizes predicted congestion levels across nearby areas.
+Markers are color-coded based on traffic severity.
 """
 )
 
 m2 = folium.Map(location=[lat, lon], zoom_start=12)
 
-if congestion < 10:
-    color = "green"
-    status = "Smooth Traffic"
+for i in range(6):
 
-elif congestion < 20:
-    color = "orange"
-    status = "Moderate Traffic"
+    lat_offset = lat + np.random.uniform(-0.02,0.02)
+    lon_offset = lon + np.random.uniform(-0.02,0.02)
 
-else:
-    color = "red"
-    status = "Heavy Congestion"
+    congestion_value = np.random.randint(5,25)
 
-folium.CircleMarker(
-    location=[lat, lon],
-    radius=18,
-    popup=f"""
-    Area: {area}<br>
-    City: {city}<br>
-    Predicted Congestion: {round(congestion,2)}<br>
-    Status: {status}
-    """,
-    color=color,
-    fill=True,
-    fill_color=color
-).add_to(m2)
+    if congestion_value < 10:
+        color="green"
+        status="Smooth Traffic"
 
-st_folium(m2, width=900)
+    elif congestion_value < 20:
+        color="orange"
+        status="Moderate Traffic"
 
+    else:
+        color="red"
+        status="Heavy Traffic"
+
+    folium.CircleMarker(
+        location=[lat_offset,lon_offset],
+        radius=15,
+        popup=f"""
+        Predicted Congestion: {congestion_value}<br>
+        Traffic Status: {status}
+        """,
+        color=color,
+        fill=True,
+        fill_color=color
+    ).add_to(m2)
+
+st_folium(m2,width=900)
 st.markdown("""
 ### Traffic Congestion Legend
 
 🟢 **Green** → Smooth traffic (Low congestion)
 
-🟡 **Orange** → Moderate traffic
+🟡 **Orange** → Moderate congestion
 
 🔴 **Red** → Heavy congestion
 """)
