@@ -10,6 +10,7 @@ import os
 import joblib
 import numpy as np
 import time
+import plotly.express as px
 
 st.set_page_config(page_title="AI Traffic Dashboard", layout="wide")
 
