@@ -93,7 +93,7 @@ lat,lon = areas[city][area]
 
 file = "traffic_history.csv"
 
-API_KEY="LZnf1ZRULJFJHuzGif1iJjvL5QTiQKNP"
+API_KEY="RXSP6YRqwacQDDY7MOtK4GNT5V9oOTE8"
 for area_name, coords in areas[city].items():
 
     lat, lon = coords
