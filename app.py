@@ -127,7 +127,10 @@ for area_name, coords in areas[city].items():
     }
 
     df = pd.DataFrame([row])
-    data_hist=pd.read_csv(file)
+    if os.path.exists(file):
+        data_hist=pd.read_csv(file)
+    else:
+        data_hist=pd.DataFrame(columns=["time","city","area","current_speed","free_speed","confidence","lat","lon"])
     data_hist["time"]=pd.to_datetime(data_hist["time"])
     data_hist=data_hist.sort_values("time")
     data_hist=data_hist.tail(50)
