@@ -6,3 +6,4 @@ streamlit-folium
 plotly
 scikit-learn
 joblib
+streamlit-autorefresh
