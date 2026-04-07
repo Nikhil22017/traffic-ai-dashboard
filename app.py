@@ -128,7 +128,7 @@ for area_name, coords in areas[city].items():
 
     df = pd.DataFrame([row])
 
-    data_his=data_hist.tail(50)
+    data_hist=data_hist.tail(50)
 
 # ----------- METRICS -----------
 congestion = max(free_speed - current_speed, 0)
