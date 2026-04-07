@@ -128,10 +128,7 @@ for area_name, coords in areas[city].items():
 
     df = pd.DataFrame([row])
 
-    if os.path.exists(file):
-        df.to_csv(file, mode="a", header=False, index=False)
-    else:
-        df.to_csv(file, index=False)
+  data_his=data_hist.tail(50)
 
 # ----------- METRICS -----------
 congestion = max(free_speed - current_speed, 0)
@@ -218,18 +215,6 @@ st.plotly_chart(fig,use_container_width=True)
 st.divider()
 
 # ----------- SAVE DATA -----------
-
-row = {
-"time":datetime.now(),
-"city":city,
-"area":area,
-"current_speed":current_speed,
-"free_speed":free_speed,
-"confidence":confidence,
-"lat":lat,
-"lon":lon
-}
-
 df = pd.DataFrame([row])
 
 file = "traffic_history.csv"
@@ -417,6 +402,7 @@ if os.path.exists("traffic_model.pkl") and len(data_hist) > 10:
     X = data_hist[["current_speed","free_speed","confidence"]]
 
     data_hist["predicted"] = model.predict(X)
+    data_hist["predicted"]=pd.Series(data_hist["predicted"]).rolling(5).mean()
 
     fig_acc = go.Figure()
 
@@ -496,10 +482,9 @@ if len(ranking) > 0:
     st.success(f"🟢 Smooth Traffic Area: {least_congested}")
 
 # ----------- AUTO REFRESH -----------
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(interval=refresh_time*1000)
 
-time.sleep(refresh_time)
-
-st.rerun()
 
 st.divider()
 st.subheader("Processing Speed")
@@ -531,19 +516,6 @@ fig_speed.update_layout(
 )
 
 st.plotly_chart(fig_speed, use_container_width=True)
-st.subheader("Processing Speed")
-
-speed=np.random.randint(20,40)
-
-fig4=go.Figure(go.Indicator(
-mode="gauge+number",
-value=speed,
-title={'text':"FPS"},
-gauge={'axis':{'range':[0,60]}}
-))
-
-fig4.update_layout(template="plotly_dark")
-
 st.plotly_chart(fig4,use_container_width=True)
 
 
