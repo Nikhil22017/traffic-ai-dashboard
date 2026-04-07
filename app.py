@@ -87,6 +87,36 @@ area = st.sidebar.selectbox("Select Area", list(areas[city].keys()))
 
 lat,lon = areas[city][area]
 
+# ----------- SESSION STATE FOR STABLE RANDOM VALUES -----------
+# FIX: All random IoT/simulated values are stored in session_state so they
+# don't regenerate on every widget interaction — only on full auto-refresh.
+
+session_key = f"{city}_{area}"
+
+if "last_session_key" not in st.session_state or st.session_state.last_session_key != session_key:
+    # City or area changed — generate fresh stable values
+    st.session_state.last_session_key = session_key
+    st.session_state.vehicle_count = int(np.random.randint(20, 120))
+    st.session_state.road_density = round(float(np.random.uniform(0.2, 0.9)), 2)
+    st.session_state.avg_vehicle_speed = int(np.random.randint(20, 60))
+    st.session_state.density_history = np.random.randint(20, 120, 10).tolist()
+    st.session_state.processing_speed = int(np.random.randint(20, 40))
+    # Stable AI congestion map markers: fixed offsets and congestion values
+    st.session_state.map_markers = [
+        {
+            "lat_offset": lat + float(np.random.uniform(-0.02, 0.02)),
+            "lon_offset": lon + float(np.random.uniform(-0.02, 0.02)),
+            "congestion_value": int(np.random.randint(5, 25))
+        }
+        for _ in range(6)
+    ]
+
+vehicle_count = st.session_state.vehicle_count
+road_density = st.session_state.road_density
+avg_vehicle_speed = st.session_state.avg_vehicle_speed
+density_history = st.session_state.density_history
+processing_speed = st.session_state.processing_speed
+
 # ----------- API CALL -----------
 
 # -------- Collect traffic data for all areas --------
@@ -133,6 +163,9 @@ for area_name, coords in areas[city].items():
     else:
         df.to_csv(file, index=False)
 
+# Restore lat/lon to selected area after the loop
+lat, lon = areas[city][area]
+
 # ----------- METRICS -----------
 congestion = max(free_speed - current_speed, 0)
 
@@ -146,11 +179,7 @@ col4.metric("Congestion", congestion)
 st.divider()
 st.subheader("IoT Sensor Data Stream")
 
-# Simulated IoT traffic sensors
-vehicle_count = np.random.randint(20,120)
-road_density = round(np.random.uniform(0.2,0.9),2)
-avg_vehicle_speed = np.random.randint(20,60)
-
+# FIX: Use stable session_state values instead of re-generating random numbers
 colA,colB,colC = st.columns(3)
 
 colA.metric("Vehicle Count Sensor", vehicle_count)
@@ -158,8 +187,7 @@ colB.metric("Road Density Sensor", road_density)
 colC.metric("Avg Vehicle Speed Sensor", f"{avg_vehicle_speed} km/h")
 st.subheader("IoT Vehicle Density Monitoring")
 
-density_history = np.random.randint(20,120,10)
-
+# FIX: Use stable density_history from session_state
 fig_density = go.Figure()
 
 fig_density.add_trace(go.Scatter(
@@ -231,8 +259,6 @@ row = {
 }
 
 df = pd.DataFrame([row])
-
-file = "traffic_history.csv"
 
 if os.path.exists(file):
     df.to_csv(file,mode="a",header=False,index=False)
@@ -336,14 +362,14 @@ Markers are color-coded based on traffic severity.
 """
 )
 
+# FIX: Use stable map markers from session_state instead of re-generating random positions
 m2 = folium.Map(location=[lat, lon], zoom_start=12)
 
-for i in range(6):
+for marker in st.session_state.map_markers:
 
-    lat_offset = lat + np.random.uniform(-0.02,0.02)
-    lon_offset = lon + np.random.uniform(-0.02,0.02)
-
-    congestion_value = np.random.randint(5,25)
+    lat_offset = marker["lat_offset"]
+    lon_offset = marker["lon_offset"]
+    congestion_value = marker["congestion_value"]
 
     if congestion_value < 10:
         color="green"
@@ -399,7 +425,7 @@ if os.path.exists("traffic_model.pkl"):
 
     colB.metric("Predicted Speed", round(predicted_speed,2))
 
-    risk_score = prediction / free_speed
+    risk_score = prediction / free_speed if free_speed > 0 else 0
 
     st.metric("Traffic Risk Score", round(risk_score,2))
 
@@ -495,18 +521,13 @@ if len(ranking) > 0:
 
     st.success(f"🟢 Smooth Traffic Area: {least_congested}")
 
-# ----------- AUTO REFRESH -----------
-
-time.sleep(refresh_time)
-
-st.rerun()
+# ----------- PROCESSING SPEED GAUGE (single, stable) -----------
+# FIX: Removed duplicate gauge section; using stable session_state value
 
 st.divider()
 st.subheader("Processing Speed")
 
-# simulate processing speed
-processing_speed = np.random.randint(20, 40)
-
+# FIX: Use stable processing_speed from session_state
 fig_speed = go.Figure(go.Indicator(
     mode="gauge+number",
     value=processing_speed,
@@ -531,22 +552,16 @@ fig_speed.update_layout(
 )
 
 st.plotly_chart(fig_speed, use_container_width=True)
-st.subheader("Processing Speed")
 
-speed=np.random.randint(20,40)
+# ----------- AUTO REFRESH -----------
+# FIX: Clear session_state on refresh so new stable values are generated next run
 
-fig4=go.Figure(go.Indicator(
-mode="gauge+number",
-value=speed,
-title={'text':"FPS"},
-gauge={'axis':{'range':[0,60]}}
-))
+time.sleep(refresh_time)
 
-fig4.update_layout(template="plotly_dark")
+# Clear stable random values so they regenerate fresh on next auto-refresh
+for key in ["vehicle_count", "road_density", "avg_vehicle_speed",
+            "density_history", "processing_speed", "map_markers", "last_session_key"]:
+    if key in st.session_state:
+        del st.session_state[key]
 
-st.plotly_chart(fig4,use_container_width=True)
-
-
-
-
-
+st.rerun()
