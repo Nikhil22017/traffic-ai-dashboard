@@ -127,7 +127,9 @@ for area_name, coords in areas[city].items():
     }
 
     df = pd.DataFrame([row])
-
+    data_hist=pd.read_csv(file)
+    data_hist["time"]=pd.to_datetime(data_hist["time"])
+    data_hist=data_hist.sort_values("time")
     data_hist=data_hist.tail(50)
 
 # ----------- METRICS -----------
