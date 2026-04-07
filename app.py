@@ -123,7 +123,7 @@ processing_speed = st.session_state.processing_speed
 
 file = "traffic_history.csv"
 
-API_KEY="RXSP6YRqwacQDDY7MOtK4GNT5V9oOTE8"
+API_KEY="8zAUO1vGRIaPMpi0Ilv2xc1CV5QO5an5"
 for area_name, coords in areas[city].items():
 
     lat, lon = coords
