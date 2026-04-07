@@ -514,44 +514,16 @@ st_autorefresh(interval=refresh_time*1000)
 st.divider()
 st.subheader("Processing Speed")
 
-# simulate processing speed
-processing_speed = np.random.randint(20, 40)
+fps = np.random.randint(15,30)
 
-fig_speed = go.Figure(go.Indicator(
+fig = go.Figure(go.Indicator(
     mode="gauge+number",
-    value=processing_speed,
+    value=fps,
     title={'text': "FPS"},
     gauge={
         'axis': {'range': [0, 60]},
-        'bar': {'color': "#00ff88"},
-        'bgcolor': "black",
-        'borderwidth': 2,
-        'bordercolor': "#00ff88",
-        'steps': [
-            {'range': [0, 20], 'color': "#1a2a3a"},
-            {'range': [20, 40], 'color': "#16263a"},
-            {'range': [40, 60], 'color': "#101e2e"}
-        ],
+        'bar': {'color': "green"}
     }
 ))
 
-fig_speed.update_layout(
-    template="plotly_dark",
-    height=350
-)
-
-st.plotly_chart(fig_speed, use_container_width=True)
-st.subheader("Processing Speed")
-
-speed=np.random.randint(20,40)
-
-fig4=go.Figure(go.Indicator(
-mode="gauge+number",
-value=speed,
-title={'text':"FPS"},
-gauge={'axis':{'range':[0,60]}}
-))
-
-fig4.update_layout(template="plotly_dark")
-
-st.plotly_chart(fig4,use_container_width=True)
+st.plotly_chart(fig, use_container_width=True)
