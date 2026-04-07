@@ -350,7 +350,7 @@ Markers are color-coded based on traffic severity.
 )
 
 m2 = folium.Map(location=[lat, lon], zoom_start=12)
-
+data_hist["area"] = data_hist["area"].astype(str)
 for i in range(6):
 
     lat_offset = lat + np.random.uniform(-0.02,0.02)
