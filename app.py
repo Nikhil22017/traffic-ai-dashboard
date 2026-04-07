@@ -518,6 +518,6 @@ fig_speed.update_layout(
 )
 
 st.plotly_chart(fig_speed, use_container_width=True)
-st.plotly_chart(fig4,use_container_width=True)
+
 
 
