@@ -337,18 +337,19 @@ st.plotly_chart(fig_vehicle, use_container_width=True)
 
 st.subheader("Traffic Heatmap")
 
-m = folium.Map(location=[lat,lon],zoom_start=12)
+# Cache the heatmap map object in session_state so it is not rebuilt on every
+# Streamlit rerun (which caused the map to flicker and reset its zoom/position).
+heatmap_key = f"heatmap_obj_{session_key}"
+if heatmap_key not in st.session_state:
+    m = folium.Map(location=[lat, lon], zoom_start=12)
+    heat_data = data_hist[["lat", "lon"]].values.tolist()
+    HeatMap(heat_data, radius=20).add_to(m)
+    folium.Marker([lat, lon], popup=f"{area},{city}").add_to(m)
+    st.session_state[heatmap_key] = m
+else:
+    m = st.session_state[heatmap_key]
 
-heat_data = data_hist[["lat","lon"]].values.tolist()
-
-HeatMap(heat_data,radius=20).add_to(m)
-
-folium.Marker(
-[lat,lon],
-popup=f"{area},{city}"
-).add_to(m)
-
-st_folium(m,width=900)
+st_folium(m, width=900, key="heatmap")
 
 st.divider()
 st.divider()
@@ -362,40 +363,42 @@ Markers are color-coded based on traffic severity.
 """
 )
 
-# FIX: Use stable map markers from session_state instead of re-generating random positions
-m2 = folium.Map(location=[lat, lon], zoom_start=12)
+# FIX: Cache the congestion map object in session_state so markers don't
+# flicker or regenerate their positions on every Streamlit rerun.
+congmap_key = f"congestion_map_obj_{session_key}"
+if congmap_key not in st.session_state:
+    m2 = folium.Map(location=[lat, lon], zoom_start=12)
 
-for marker in st.session_state.map_markers:
+    for marker in st.session_state.map_markers:
 
-    lat_offset = marker["lat_offset"]
-    lon_offset = marker["lon_offset"]
-    congestion_value = marker["congestion_value"]
+        lat_offset = marker["lat_offset"]
+        lon_offset = marker["lon_offset"]
+        congestion_value = marker["congestion_value"]
 
-    if congestion_value < 10:
-        color="green"
-        status="Smooth Traffic"
+        if congestion_value < 10:
+            color = "green"
+            status = "Smooth Traffic"
+        elif congestion_value < 20:
+            color = "orange"
+            status = "Moderate Traffic"
+        else:
+            color = "red"
+            status = "Heavy Traffic"
 
-    elif congestion_value < 20:
-        color="orange"
-        status="Moderate Traffic"
+        folium.CircleMarker(
+            location=[lat_offset, lon_offset],
+            radius=15,
+            popup=f"Predicted Congestion: {congestion_value}<br>Traffic Status: {status}",
+            color=color,
+            fill=True,
+            fill_color=color
+        ).add_to(m2)
 
-    else:
-        color="red"
-        status="Heavy Traffic"
+    st.session_state[congmap_key] = m2
+else:
+    m2 = st.session_state[congmap_key]
 
-    folium.CircleMarker(
-        location=[lat_offset,lon_offset],
-        radius=15,
-        popup=f"""
-        Predicted Congestion: {congestion_value}<br>
-        Traffic Status: {status}
-        """,
-        color=color,
-        fill=True,
-        fill_color=color
-    ).add_to(m2)
-
-st_folium(m2,width=900)
+st_folium(m2, width=900, key="congestion_map")
 st.markdown("""
 ### Traffic Congestion Legend
 
@@ -554,13 +557,17 @@ fig_speed.update_layout(
 st.plotly_chart(fig_speed, use_container_width=True)
 
 # ----------- AUTO REFRESH -----------
-# FIX: Clear session_state on refresh so new stable values are generated next run
+# On auto-refresh: clear all stable/cached values so they regenerate next run.
 
 time.sleep(refresh_time)
 
-# Clear stable random values so they regenerate fresh on next auto-refresh
-for key in ["vehicle_count", "road_density", "avg_vehicle_speed",
-            "density_history", "processing_speed", "map_markers", "last_session_key"]:
+keys_to_clear = [
+    "vehicle_count", "road_density", "avg_vehicle_speed",
+    "density_history", "processing_speed", "map_markers", "last_session_key",
+    f"heatmap_obj_{session_key}",
+    f"congestion_map_obj_{session_key}",
+]
+for key in keys_to_clear:
     if key in st.session_state:
         del st.session_state[key]
 
